@@ -13,9 +13,35 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ####Question 1
 ```{r}
+# Load necessary packages
 library(palmerpenguins)
 data("penguins", package = "palmerpenguins")
+str(penguins)
 
+summary(penguins)
+
+```
+**Disscussion**
+Penguins Dataset Overview
+
+The `penguins` dataset contains information about penguin species collected from Palmer Station, Antarctica. Important variables in this dataset include:
+
+- **Species**: Species of penguin (`Adelie`, `Chinstrap`, `Gentoo`)
+- **island**: Island name (`Biscoe`, `Dream`, `Torgersen`)
+- **bill_length_mm**: Length of the penguin's bill in millimeters
+- **bill_depth_mm**: Depth of the penguin's bill in millimeters
+- **flipper_length_mm**: Length of the penguin's flippers in millimeters
+- **body_mass_g**: Body mass in grams
+- **sex**: Sex of the penguin (`male`, `female`)
+- **year**: Time when the data recorded
+
+The dataset contains `r nrow(penguins)` rows and `r ncol(penguins)` columns. The mean flipper length across all penguins is `r round(mean(penguins$flipper_length_mm, na.rm = TRUE), 2)` mm.
+
+**Conclusion**
+This dataset provides valuable biological and ecological data for analysis, enabling the study of penguin species and their physical characteristics in relation to their environment. 
+
+
+```{r}
 library(ggplot2)
 
 ggplot(penguins, aes(x = bill_length_mm, y = flipper_length_mm, color = species)) +
@@ -25,34 +51,84 @@ ggplot(penguins, aes(x = bill_length_mm, y = flipper_length_mm, color = species)
   theme_minimal()
 
 ggsave("penguin_scatterplot.png")
-
 ```
 
+
 ####Question 2
+
+---
+title: "Data Frame and Variable Type Coercion"
+output: html_document
+---
 
 ```{r}
 set.seed(123) # For reproducibility
 
-random_sample = rnorm(10)
-logical_vector = random_sample > 0
-character_vector = as.character(1:10)
-factor_vector = factor(rep(c("A", "B", "C"), length.out = 10))
+# Create a random sample from a standard normal distribution
+random_sample <- rnorm(10)
 
-df = data.frame(random_sample, logical_vector, character_vector, factor_vector)
+# Create a logical vector indicating whether the elements of random_sample are greater than 0
+logical_vector <- random_sample > 0
+
+# Create a character vector representing colors
+character_vector <- c("Red", "Yellow", "Red", "Brown", "Purple", 
+                      "Purple", "Green", "Green", "Yellow", "Green")
+
+# Create a factor vector with 3 levels
+factor_vector <- factor(rep(c("A", "B", "C"), length.out = 10))
+
+# Combine the vectors into a data frame
+df <- data.frame(random_sample, logical_vector, character_vector, factor_vector)
+
+# Print the data frame
 print(df)
 
+# Load the tidyverse package
 library(tidyverse)
-mean(df$random_sample)        # Works
-mean(df$logical_vector)       # Works (TRUE is 1, FALSE is 0)
-mean(df$character_vector)   # Doesn't work
-mean(df$factor_vector)      # Doesn't work
 
-as.numeric(df$logical_vector)      # Converts TRUE to 1, FALSE to 0
-as.numeric(df$character_vector)    # Returns NA with a warning
-as.numeric(df$factor_vector)       # Converts factor levels to their underlying numeric codes
+# Calculate the mean of the numeric vector (random_sample)
+mean_random_sample <- mean(pull(df, random_sample))
+mean_random_sample  # This works because random_sample is numeric
 
+# Calculate the mean of the logical vector (logical_vector)
+mean_logical_vector <- mean(pull(df, logical_vector))
+mean_logical_vector  # This works because TRUE is treated as 1 and FALSE as 0
+
+# Attempt to calculate the mean of the character vector (character_vector)
+# This will fail because character data cannot be averaged
+# Commenting out to avoid error
+# mean_character_vector <- mean(pull(df, character_vector))
+
+# Attempt to calculate the mean of the factor vector (factor_vector)
+# This will also fail because factors are categorical, not numeric
+# Commenting out to avoid error
+# mean_factor_vector <- mean(pull(df, factor_vector))
+
+# Convert logical vector to numeric
+numeric_logical_vector <- as.numeric(df$logical_vector)
+numeric_logical_vector  # Output shows that TRUE becomes 1 and FALSE becomes 0.
+
+# Convert character vector to numeric
+numeric_character_vector <- as.numeric(as.factor(df$character_vector))
+numeric_character_vector  # Characters are converted to their underlying factor levels.
+
+# Convert factor vector to numeric
+numeric_factor_vector <- as.numeric(df$factor_vector)
+numeric_factor_vector  # Factor levels are converted to their underlying numeric codes.
 ```
+### Explanation of What Happens:
 
+**Logical Vector Conversion**:
+   Logical vectors in R can be easily coerced to numeric, with `TRUE` being converted to 1 and `FALSE` to 0. This is because logical values are essentially treated as binary numbers in R.
 
+**Character Vector Conversion**:
+   When you created the data frame, R likely converted the character vector to a factor. As a result, `as.numeric()` on this vector returns the internal numeric codes of the factor levels (1 for the first unique character, 2 for the second, and so on). This explains why it outputs numeric values even though the original data is not numeric.
 
-The `penguins` dataset contains `r nrow(penguins)` rows and `r ncol(penguins)` columns. Some important variables include species (Adelie, Chinstrap, and Gentoo), flipper_length_mm, and bill_length_mm. The mean flipper length is `r mean(penguins$flipper_length_mm, na.rm = TRUE)` mm.
+**Factor Vector Conversion**:
+   Factors are stored as integers internally, where each level corresponds to a numeric code (e.g., 1 for the first level, 2 for the second level, etc.). When you apply `as.numeric()` to a factor, it returns these underlying codes rather than the factor labels themselves.
+
+### Conclusion:
+
+**Logical vector**: Converts logically and correctly to 1s and 0s.
+**Character vector**: Was treated as a factor internally, leading to numeric output corresponding to factor levels.
+**Factor vector**: As expected, returns the numeric codes for each factor level.
